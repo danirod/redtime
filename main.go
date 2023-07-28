@@ -4,18 +4,16 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
-	"github.com/rodaine/table"
 )
 
 type subcommand struct {
-	name    string
-	fs      *flag.FlagSet
-	handler func()
+	name        string
+	description string
+	fs          *flag.FlagSet
+	handler     func()
 }
 type subcommandMap []subcommand
 
@@ -24,21 +22,49 @@ var (
 	flagSetActivities = flag.NewFlagSet("activities", flag.ExitOnError)
 	flagSetIssues     = flag.NewFlagSet("issues", flag.ExitOnError)
 	flagSetProjects   = flag.NewFlagSet("projects", flag.ExitOnError)
+	flagSetTimelog    = flag.NewFlagSet("timelog", flag.ExitOnError)
 
 	flagFull          bool
 	flagIncludeClosed bool
 	flagProjectId     uint
 	flagIssueId       int
+	flagDecimalTime   bool
 	flagActivityId    int
 	flagComments      string
 
 	context *redmineClient
 
 	subcommands = []subcommand{
-		{name: "projects", fs: flagSetProjects, handler: doListProjects},
-		{name: "issues", fs: flagSetIssues, handler: doListIssues},
-		{name: "activities", fs: flagSetActivities, handler: doListActivities},
-		{name: "track", fs: flagSetTrack, handler: doTrack},
+		{
+			name:        "activities",
+			description: "list the available activities",
+			fs:          flagSetActivities,
+			handler:     doListActivities,
+		},
+		{
+			name:        "issues",
+			description: "list the issues in a project",
+			fs:          flagSetIssues,
+			handler:     doListIssues,
+		},
+		{
+			name:        "projects",
+			description: "list the projects in the instance",
+			fs:          flagSetProjects,
+			handler:     doListProjects,
+		},
+		{
+			name:        "timelog",
+			description: "list the time entries in a project or an issue",
+			fs:          flagSetTimelog,
+			handler:     doListTimelog,
+		},
+		{
+			name:        "track",
+			description: "track time",
+			fs:          flagSetTrack,
+			handler:     doTrack,
+		},
 	}
 )
 
@@ -51,6 +77,10 @@ func init() {
 
 	flagSetIssues.UintVar(&flagProjectId, "project", 0, "The project ID")
 	flagSetIssues.BoolVar(&flagIncludeClosed, "closed", false, "Include closed issues")
+
+	flagSetTimelog.UintVar(&flagProjectId, "project", 0, "The project to get entries for")
+	flagSetTimelog.IntVar(&flagIssueId, "issue", 0, "The issue to get entries for")
+	flagSetTimelog.BoolVar(&flagDecimalTime, "decimal", false, "Use decimal time when reporting")
 
 	flagSetProjects.BoolVar(&flagFull, "full", false, "show extra information per project")
 }
@@ -78,101 +108,10 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Print("Subcommands: ")
-	for _, subcommand := range subcommands {
-		fmt.Print(subcommand.name + " ")
+	fmt.Printf("%s <command> <flags>\n", filepath.Base(os.Args[0]))
+	fmt.Println("Commands:")
+	for _, cmd := range subcommands {
+		fmt.Printf("   %-12s %s\n", cmd.name, cmd.description)
 	}
 	fmt.Println()
-}
-
-func doTrack() {
-	fmt.Println("Counting time. Press Ctrl-C to stop tracking time")
-
-	before := time.Now()
-	ctrlChannel := make(chan os.Signal, 1)
-	signal.Notify(ctrlChannel, syscall.SIGINT)
-	<-ctrlChannel
-	after := time.Now()
-
-	seconds := after.Unix() - before.Unix()
-	hours := float64(seconds) / 3600.0
-	if err := context.pushActivity(&remoteTimeEntry{
-		IssueId:    flagIssueId,
-		SpentOn:    time.Now().Format("2006-01-02"),
-		Hours:      hours,
-		ActivityId: flagActivityId,
-		Comments:   flagComments,
-	}); err != nil {
-		fmt.Println("")
-		fmt.Println("Something bad has happened, maybe you need to do it yourself now")
-		fmt.Println("Seconds spent here:", seconds)
-		panic(err)
-	}
-	fmt.Println("Successfully registered")
-	os.Exit(0)
-}
-
-func doListActivities() {
-	acts, err := context.fetchActivities()
-	if err != nil {
-		panic(err)
-	}
-
-	tbl := table.New("ID", "ACTIVITY")
-	for id, act := range acts {
-		tbl.AddRow(id, act)
-	}
-	tbl.Print()
-}
-
-func doListProjects() {
-	proj, err := context.fetchProjects()
-	if err != nil {
-		panic(err)
-	}
-
-	header := []interface{}{"ID", "NAME", "UPDATED ON"}
-	if flagFull {
-		header = []interface{}{"ID", "NAME", "SLUG", "PUBLIC", "UPDATED ON"}
-	}
-	tbl := table.New(header...)
-	for _, p := range proj.Projects {
-		updatedAt, _ := time.Parse(time.RFC3339, p.UpdatedOn)
-		updatedAtString := updatedAt.Format("2006-01-02 15:04:05")
-		row := []interface{}{p.Id, p.Name, updatedAtString}
-		if flagFull {
-			public := " "
-			if p.IsPublic {
-				public = "X"
-			}
-			row = []interface{}{p.Id, p.Name, p.Identifier, public, updatedAtString}
-		}
-		tbl.AddRow(row...)
-	}
-	tbl.Print()
-}
-
-func doListIssues() {
-	if flagProjectId == 0 {
-		fmt.Println("Missing project ID")
-		flagSetIssues.PrintDefaults()
-		return
-	}
-
-	params := remoteIssueParams{ProjectId: int(flagProjectId)}
-	if flagIncludeClosed {
-		params.IncludeClosed = true
-	}
-	issues, err := context.fetchIssues(&params)
-	if err != nil {
-		panic(err)
-	}
-
-	tbl := table.New("ID", "SUBJECT", "ASSIGNED", "TYPE", "STATUS", "PRIORITY", "LAST UPDATE")
-	for _, issue := range issues.Issues {
-		updatedAt, _ := time.Parse(time.RFC3339, issue.UpdatedOn)
-		updatedAtString := updatedAt.Format("2006-01-02 15:04:05")
-		tbl.AddRow(issue.Id, issue.Subject, issue.AssignedTo.Name, issue.Tracker.Name, issue.Status.Name, issue.Priority.Name, updatedAtString)
-	}
-	tbl.Print()
 }

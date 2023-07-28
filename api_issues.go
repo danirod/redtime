@@ -41,11 +41,21 @@ type remoteIssueList struct {
 type remoteIssueParams struct {
 	ProjectId     int
 	IncludeClosed bool
+	IssueIds      []int
 }
 
 func (params *remoteIssueParams) Encode() url.Values {
 	values := url.Values{}
-	values.Add("project_id", fmt.Sprintf("%d", params.ProjectId))
+	if params.ProjectId > 0 {
+		values.Add("project_id", fmt.Sprintf("%d", params.ProjectId))
+	}
+	if len(params.IssueIds) > 0 {
+		issue_id := ""
+		for _, id := range params.IssueIds {
+			issue_id = fmt.Sprintf("%s,%d", issue_id, id)
+		}
+		values.Add("issue_id", issue_id[1:])
+	}
 	if params.IncludeClosed {
 		values.Add("status_id", "*")
 	}
