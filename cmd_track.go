@@ -9,6 +9,11 @@ import (
 )
 
 func doTrack() {
+	if flagIssueId == 0 {
+		fmt.Println("Missing issue ID")
+		flagSetTrack.PrintDefaults()
+		os.Exit(1)
+	}
 	fmt.Println("Counting time. Press Ctrl-C to stop tracking time")
 
 	before := time.Now()
