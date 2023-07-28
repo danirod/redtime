@@ -8,21 +8,21 @@ import (
 	"strings"
 )
 
-type Context struct {
+type redmineClient struct {
 	apiRoot    string
 	apiRootURL *url.URL
 	apiToken   string
 }
 
-func NewContext(root, token string) (*Context, error) {
+func newContext(root, token string) (*redmineClient, error) {
 	apiRootURL, err := url.Parse(root)
 	if err != nil {
 		return nil, err
 	}
-	return &Context{apiRoot: root, apiToken: token, apiRootURL: apiRootURL}, nil
+	return &redmineClient{apiRoot: root, apiToken: token, apiRootURL: apiRootURL}, nil
 }
 
-func (ctx *Context) buildGetRequest(urlpath string, params *url.Values) (*http.Request, error) {
+func (ctx *redmineClient) buildGetRequest(urlpath string, params *url.Values) (*http.Request, error) {
 	if !strings.HasSuffix(urlpath, ".json") {
 		urlpath = urlpath + ".json"
 	}
@@ -38,7 +38,7 @@ func (ctx *Context) buildGetRequest(urlpath string, params *url.Values) (*http.R
 	return req, nil
 }
 
-func (ctx *Context) buildPostRequest(urlpath string, body io.Reader) (*http.Request, error) {
+func (ctx *redmineClient) buildPostRequest(urlpath string, body io.Reader) (*http.Request, error) {
 	// Build the payload URL.
 	if !strings.HasSuffix(urlpath, ".json") {
 		urlpath = urlpath + ".json"
@@ -54,7 +54,7 @@ func (ctx *Context) buildPostRequest(urlpath string, body io.Reader) (*http.Requ
 	return req, nil
 }
 
-func (ctx *Context) secureRequest(req *http.Request) ([]byte, error) {
+func (ctx *redmineClient) secureRequest(req *http.Request) ([]byte, error) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (ctx *Context) secureRequest(req *http.Request) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func (ctx *Context) secureCreate(req *http.Request) ([]byte, error) {
+func (ctx *redmineClient) secureCreate(req *http.Request) ([]byte, error) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
