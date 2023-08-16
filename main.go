@@ -56,6 +56,12 @@ var (
 			handler:     doListProjects,
 		},
 		{
+			name:        "status",
+			description: "show the status of the running task",
+			fs:          nil,
+			handler:     doStatus,
+		},
+		{
 			name:        "timelog",
 			description: "list the time entries in a project or an issue",
 			fs:          flagSetTimelog,
@@ -104,7 +110,9 @@ func main() {
 	}
 	for _, subcommand := range subcommands {
 		if subcommand.name == os.Args[1] {
-			subcommand.fs.Parse(os.Args[2:])
+			if subcommand.fs != nil {
+				subcommand.fs.Parse(os.Args[2:])
+			}
 			subcommand.handler()
 			return
 		}
