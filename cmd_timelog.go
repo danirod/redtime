@@ -34,6 +34,9 @@ func doListTimelog() {
 		params.issueId = uint(flagIssueId)
 		params.criteria = "issue"
 	}
+	if err := params.TimeFilter(flagTimeSince, flagTimeUntil); err != nil {
+		panic(err)
+	}
 	entries, err := context.fetchTimeEntries(&params)
 	if err != nil {
 		panic(err)

@@ -31,6 +31,8 @@ var (
 	flagDecimalTime   bool
 	flagActivityId    int
 	flagComments      string
+	flagTimeSince     string
+	flagTimeUntil     string
 
 	context *redmineClient
 
@@ -81,6 +83,8 @@ func init() {
 	flagSetTimelog.UintVar(&flagProjectId, "project", 0, "The project to get entries for")
 	flagSetTimelog.IntVar(&flagIssueId, "issue", 0, "The issue to get entries for")
 	flagSetTimelog.BoolVar(&flagDecimalTime, "decimal", false, "Use decimal time when reporting")
+	flagSetTimelog.StringVar(&flagTimeSince, "since", "", "Since when include entries")
+	flagSetTimelog.StringVar(&flagTimeUntil, "until", "", "Until when include entries")
 
 	flagSetProjects.BoolVar(&flagFull, "full", false, "show extra information per project")
 }

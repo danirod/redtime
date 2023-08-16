@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
+	"time"
 )
 
 type remoteTimelogEntry struct {
@@ -29,6 +31,28 @@ type remoteTimelogParams struct {
 	projectId          uint
 	excludeSubprojects bool
 	issueId            uint
+	timeSince          time.Time
+	timeUntil          time.Time
+}
+
+func (params *remoteTimelogParams) TimeFilter(since, until string) (err error) {
+	if since != "" {
+		if params.timeSince, err = time.Parse(time.DateOnly, since); err != nil {
+			return
+		}
+	}
+	if until != "" {
+		if params.timeUntil, err = time.Parse(time.DateOnly, until); err != nil {
+			return
+		}
+	}
+
+	unixSince := params.timeSince.Unix()
+	unixUntil := params.timeUntil.Unix()
+	if unixSince > 0 && unixUntil > 0 && unixSince > unixUntil {
+		err = errors.New("until is older than since")
+	}
+	return
 }
 
 func (params *remoteTimelogParams) Encode() url.Values {
@@ -41,6 +65,12 @@ func (params *remoteTimelogParams) Encode() url.Values {
 		}
 	case "issue":
 		values.Add("issue_id", fmt.Sprintf("%d", params.issueId))
+	}
+	if params.timeSince.Unix() > 0 {
+		values.Set("from", params.timeSince.Format("2006-01-02"))
+	}
+	if params.timeUntil.Unix() > 0 {
+		values.Set("to", params.timeUntil.Format("2006-01-02"))
 	}
 	return values
 }
