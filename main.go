@@ -87,9 +87,10 @@ func init() {
 
 func main() {
 	var err error
+	url := os.Getenv("REDMINE_API_URL")
 	key := os.Getenv("REDMINE_API_KEY")
 
-	if context, err = newContext("http://localhost:3000", key); err != nil {
+	if context, err = newContext(url, key); err != nil {
 		panic(err)
 	}
 
