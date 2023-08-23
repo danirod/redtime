@@ -5,53 +5,29 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 type redmineClient struct {
-	apiRoot    string
-	apiRootURL *url.URL
-	apiToken   string
+	builder *RequestBuilder
 }
 
 func newContext(root, token string) (*redmineClient, error) {
-	apiRootURL, err := url.Parse(root)
+	builder, err := NewRequestBuilder(root, token)
 	if err != nil {
 		return nil, err
 	}
-	return &redmineClient{apiRoot: root, apiToken: token, apiRootURL: apiRootURL}, nil
+	return &redmineClient{builder: builder}, nil
 }
 
 func (ctx *redmineClient) buildGetRequest(urlpath string, params *url.Values) (*http.Request, error) {
-	if !strings.HasSuffix(urlpath, ".json") {
-		urlpath = urlpath + ".json"
-	}
-	finalURL := ctx.apiRootURL.JoinPath(urlpath)
 	if params != nil {
-		finalURL.RawQuery = params.Encode()
+		return ctx.builder.Get(urlpath, *params)
 	}
-	req, err := http.NewRequest(http.MethodGet, finalURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("X-Redmine-Api-Key", ctx.apiToken)
-	return req, nil
+	return ctx.builder.Get(urlpath, url.Values{})
 }
 
 func (ctx *redmineClient) buildPostRequest(urlpath string, body io.Reader) (*http.Request, error) {
-	// Build the payload URL.
-	if !strings.HasSuffix(urlpath, ".json") {
-		urlpath = urlpath + ".json"
-	}
-	finalURL := ctx.apiRootURL.JoinPath(urlpath)
-
-	req, err := http.NewRequest(http.MethodPost, finalURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("X-Redmine-Api-Key", ctx.apiToken)
-	req.Header.Add("Content-Type", "application/json")
-	return req, nil
+	return ctx.builder.Post(urlpath, body)
 }
 
 func (ctx *redmineClient) secureRequest(req *http.Request) ([]byte, error) {
