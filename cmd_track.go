@@ -96,6 +96,8 @@ func doTrack() {
 		panic(err)
 	}
 
+	spool.Print()
+
 	fmt.Println("Counting time. Press Ctrl-C to stop tracking time")
 
 	ctrlChannel := make(chan os.Signal, 1)
@@ -103,7 +105,6 @@ func doTrack() {
 	<-ctrlChannel
 
 	fmt.Println("Stopped counting time")
-	spool.Print()
 	if showConfirmPush() {
 		pushSpool(&spool)
 		fmt.Println("Successfully registered")
