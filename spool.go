@@ -34,7 +34,7 @@ func (s *spoolfile) CreateTimeEntry(end time.Time) *remoteTimeEntry {
 }
 
 func (s *spoolfile) FilePath() (string, error) {
-	return xdg.StateFile("redtime/spoolfile.json")
+	return xdg.DataFile("redtime/spoolfile.json")
 }
 
 func (s *spoolfile) Delete() error {
