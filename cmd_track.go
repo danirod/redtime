@@ -63,6 +63,20 @@ func doTrack() {
 		os.Exit(1)
 	}
 
+	if flagActivityId == 0 {
+		// Check if there is a default activity
+		act, err := context.fetchDefaultActivity()
+		if err != nil {
+			panic(err)
+		}
+		if act == nil {
+			fmt.Println("Missing activity ID and no default activity!")
+			flagSetTrack.PrintDefaults()
+			os.Exit(1)
+		}
+		flagActivityId = act.Id
+	}
+
 	var spool spoolfile
 	exists, err := spool.Exists()
 	if err != nil {

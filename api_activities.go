@@ -43,3 +43,16 @@ func (ctx *redmineClient) fetchActivities() (map[uint]remoteActivityType, error)
 	}
 	return activities.Map(), nil
 }
+
+func (ctx *redmineClient) fetchDefaultActivity() (*remoteActivityType, error) {
+	activities, err := ctx.fetchActivities()
+	if err != nil {
+		return nil, err
+	}
+	for _, act := range activities {
+		if act.IsDefault {
+			return &act, nil
+		}
+	}
+	return nil, nil
+}
