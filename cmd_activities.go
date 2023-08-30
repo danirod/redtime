@@ -8,9 +8,17 @@ func doListActivities() {
 		panic(err)
 	}
 
-	tbl := table.New("ID", "ACTIVITY")
+	tbl := table.New("ID", "ACTIVITY", "DEF", "ACT")
 	for id, act := range acts {
-		tbl.AddRow(id, act)
+		isDefault := "   "
+		isActive := "   "
+		if act.IsDefault {
+			isDefault = "[X]"
+		}
+		if act.Active {
+			isActive = "[X]"
+		}
+		tbl.AddRow(id, act.Name, isDefault, isActive)
 	}
 	tbl.Print()
 }

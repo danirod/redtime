@@ -9,7 +9,7 @@ type remoteTimeEntry struct {
 	IssueId    int     `json:"issue_id"`
 	SpentOn    string  `json:"spent_on"`
 	Hours      float64 `json:"hours"`
-	ActivityId int     `json:"activity_id"`
+	ActivityId uint    `json:"activity_id"`
 	Comments   string  `json:"comments"`
 }
 

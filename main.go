@@ -29,7 +29,7 @@ var (
 	flagProjectId     uint
 	flagIssueId       int
 	flagDecimalTime   bool
-	flagActivityId    int
+	flagActivityId    uint
 	flagComments      string
 	flagTimeSince     string
 	flagTimeUntil     string
@@ -80,7 +80,7 @@ func init() {
 	godotenv.Load()
 
 	flagSetTrack.IntVar(&flagIssueId, "issue", 0, "The issue ID")
-	flagSetTrack.IntVar(&flagActivityId, "activity", 0, "The activity ID")
+	flagSetTrack.UintVar(&flagActivityId, "activity", 0, "The activity ID")
 	flagSetTrack.StringVar(&flagComments, "comment", "", "The comment to assign")
 
 	flagSetIssues.UintVar(&flagProjectId, "project", 0, "The project ID")

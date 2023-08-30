@@ -13,7 +13,7 @@ import (
 
 type spoolfile struct {
 	IssueId    int    `json:"issue_id"`
-	ActivityId int    `json:"activity_id"`
+	ActivityId uint   `json:"activity_id"`
 	Comment    string `json:"comment"`
 	StartDate  int64  `json:"start_date"`
 }
@@ -116,7 +116,7 @@ func (s *spoolfile) Print() {
 
 	startedAt := time.Unix(s.StartDate, 0)
 	fmt.Printf("Comment: %s\n", s.Comment)
-	fmt.Printf("Activity: %s\n", acts[s.ActivityId])
+	fmt.Printf("Activity: %s\n", acts[s.ActivityId].Name)
 	fmt.Printf("Issue: %s\n", issue.Subject)
 	fmt.Printf("Started on: %s\n", startedAt.Format(time.RFC822))
 }

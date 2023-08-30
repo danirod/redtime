@@ -5,19 +5,26 @@ import (
 	"net/http"
 )
 
-type remoteTimeEntryActivities struct {
-	Activities []namedEntry `json:"time_entry_activities"`
+type remoteActivityType struct {
+	Id        uint   `json:"id"`
+	Name      string `json:"name"`
+	IsDefault bool   `json:"is_default"`
+	Active    bool   `json:"active"`
 }
 
-func (act *remoteTimeEntryActivities) Map() map[int]string {
-	activities := map[int]string{}
+type remoteTimeEntryActivities struct {
+	Activities []remoteActivityType `json:"time_entry_activities"`
+}
+
+func (act *remoteTimeEntryActivities) Map() map[uint]remoteActivityType {
+	activities := map[uint]remoteActivityType{}
 	for _, item := range act.Activities {
-		activities[item.Id] = item.Name
+		activities[item.Id] = item
 	}
 	return activities
 }
 
-func (ctx *redmineClient) fetchActivities() (map[int]string, error) {
+func (ctx *redmineClient) fetchActivities() (map[uint]remoteActivityType, error) {
 	var (
 		req        *http.Request
 		data       []byte
