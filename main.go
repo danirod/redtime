@@ -28,6 +28,7 @@ var (
 	flagIncludeClosed bool
 	flagProjectId     uint
 	flagIssueId       int
+	flagPivot         string
 	flagDecimalTime   bool
 	flagActivityId    uint
 	flagComments      string
@@ -91,6 +92,7 @@ func init() {
 	flagSetTimelog.BoolVar(&flagDecimalTime, "decimal", false, "Use decimal time when reporting")
 	flagSetTimelog.StringVar(&flagTimeSince, "since", "", "Since when include entries")
 	flagSetTimelog.StringVar(&flagTimeUntil, "until", "", "Until when include entries")
+	flagSetTimelog.StringVar(&flagPivot, "pivot", "", "Group entries by a specific field")
 
 	flagSetProjects.BoolVar(&flagFull, "full", false, "show extra information per project")
 }

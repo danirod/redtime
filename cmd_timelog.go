@@ -21,11 +21,6 @@ func doListTimelog() {
 		os.Exit(1)
 	}
 
-	var (
-		totalTime       float64 = 0
-		totalTimeString string
-	)
-
 	params := remoteTimelogParams{}
 	if flagProjectId > 0 {
 		params.projectId = flagProjectId
@@ -41,6 +36,20 @@ func doListTimelog() {
 	if err != nil {
 		panic(err)
 	}
+
+	switch flagPivot {
+	case "issue":
+		doIssuePivotTimelog(entries)
+	case "":
+		doRawTimelog(entries)
+	}
+}
+
+func doRawTimelog(entries *remoteTimelogList) {
+	var (
+		totalTime       float64 = 0
+		totalTimeString string
+	)
 
 	tbl := table.New("ID", "USER", "ACTIVITY", "ISSUE", "COMMENT", "DATE", "TIME")
 	for _, entry := range entries.Entries {
@@ -65,5 +74,47 @@ func doListTimelog() {
 	tbl.AddRow("", "", "", "", "", "----------", strings.Repeat("-", len(totalTimeString)))
 	tbl.AddRow("", "", "", "", "", "TOTAL TIME", totalTimeString)
 
+	tbl.Print()
+}
+
+func doIssuePivotTimelog(entries *remoteTimelogList) {
+	var (
+		totals            = map[int]float64{}
+		issues            = map[int]namedEntry{}
+		totalTime float64 = 0
+	)
+
+	// pivot by timelog
+	for _, entry := range entries.Entries {
+		if _, ok := totals[entry.Issue.Id]; !ok {
+			totals[entry.Issue.Id] = 0
+		}
+		totals[entry.Issue.Id] += entry.Hours
+
+		if _, ok := issues[entry.Issue.Id]; !ok {
+			issues[entry.Issue.Id] = entry.Issue
+		}
+	}
+
+	tbl := table.New("ISSUE", "SUBJECT", "TIME")
+	for id, total := range totals {
+		totalTime += total
+		var hours string
+		if flagDecimalTime {
+			hours = fmt.Sprintf("%.02f", total)
+		} else {
+			hours = formatAsTime(total)
+		}
+		tbl.AddRow(id, issues[id].Name, hours)
+	}
+
+	var totalHours string
+	if flagDecimalTime {
+		totalHours = fmt.Sprintf("%.02f", totalTime)
+	} else {
+		totalHours = formatAsTime(totalTime)
+	}
+	tbl.AddRow("", "----------", strings.Repeat("-", len(totalHours)))
+	tbl.AddRow("", "TOTAL TIME", totalHours)
 	tbl.Print()
 }
