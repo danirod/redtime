@@ -56,6 +56,13 @@ func showSpoolMenu() trackInteractiveOption {
 	}
 }
 
+func countElapsed(since int64) string {
+	seconds := time.Now().Unix() - since
+	hh, mmss := seconds/3600, seconds%3600
+	mm, ss := mmss/60, mmss%60
+	return fmt.Sprintf("%d:%02d:%02d", hh, mm, ss)
+}
+
 func doTrack() {
 	if flagIssueId == 0 {
 		fmt.Println("Missing issue ID")
@@ -114,9 +121,24 @@ func doTrack() {
 
 	fmt.Println("Counting time. Press Ctrl-C to stop tracking time")
 
+	elapsed := countElapsed(spool.StartDate)
+	fmt.Printf("\rT: %d | E: %s", flagIssueId, elapsed)
+
+	ticker := time.NewTicker(time.Second)
+
 	ctrlChannel := make(chan os.Signal, 1)
 	signal.Notify(ctrlChannel, syscall.SIGINT)
-	<-ctrlChannel
+
+	keepRunning := true
+	for keepRunning {
+		select {
+		case <-ticker.C:
+			elapsed = countElapsed(spool.StartDate)
+			fmt.Printf("\rT: %d | E: %s", flagIssueId, elapsed)
+		case <-ctrlChannel:
+			keepRunning = false
+		}
+	}
 
 	fmt.Println("Stopped counting time")
 	if showConfirmPush() {
