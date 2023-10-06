@@ -36,6 +36,7 @@ func (rb *RequestBuilder) request(method, uri string, params url.Values, body io
 	path.RawQuery = params.Encode()
 	rq, err := http.NewRequest(method, path.String(), body)
 	if err == nil {
+		rq.Header.Add("Content-Type", "application/json")
 		rq.Header.Add("X-Redmine-Api-Key", rb.api)
 	}
 	return rq, err
