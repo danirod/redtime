@@ -24,6 +24,7 @@ var (
 	flagSetProjects   = flag.NewFlagSet("projects", flag.ExitOnError)
 	flagSetTimelog    = flag.NewFlagSet("timelog", flag.ExitOnError)
 
+	flagForce         bool
 	flagFull          bool
 	flagIncludeClosed bool
 	flagProjectId     uint
@@ -83,6 +84,7 @@ func init() {
 	flagSetTrack.IntVar(&flagIssueId, "issue", 0, "The issue ID")
 	flagSetTrack.UintVar(&flagActivityId, "activity", 0, "The activity ID")
 	flagSetTrack.StringVar(&flagComments, "comment", "", "The comment to assign")
+	flagSetTrack.BoolVar(&flagForce, "force", false, "Delete the spool in case of conflict")
 
 	flagSetIssues.UintVar(&flagProjectId, "project", 0, "The project ID")
 	flagSetIssues.BoolVar(&flagIncludeClosed, "closed", false, "Include closed issues")

@@ -89,7 +89,7 @@ func doTrack() {
 	if err != nil {
 		panic(err)
 	}
-	if exists {
+	if exists && !flagForce {
 		if err := spool.ReadToDefault(); err != nil {
 			panic(err)
 		}
