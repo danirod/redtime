@@ -4,7 +4,54 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 )
+
+type remoteNewIssuePayloadData struct {
+	Issue struct {
+		Subject       string `json:"subject"`
+		ProjectId     uint   `json:"project_id"`
+		TrackerId     uint   `json:"tracker_id"`
+		ParentIssueId uint   `json:"parent_issue_id"`
+	} `json:"issue"`
+}
+
+func (payloadData *remoteNewIssuePayloadData) Encode() (string, error) {
+	data := make(map[string]interface{})
+	data["subject"] = payloadData.Issue.Subject
+	data["project_id"] = payloadData.Issue.ProjectId
+	data["tracker_id"] = payloadData.Issue.TrackerId
+	if pid := payloadData.Issue.ParentIssueId; pid != 0 {
+		data["parent_issue_id"] = pid
+	}
+
+	wrapped := map[string]interface{}{
+		"issue": data,
+	}
+
+	encoded, err := json.Marshal(&wrapped)
+	if err != nil {
+		return "", err
+	}
+	return string(encoded), nil
+}
+
+func (ctx *redmineClient) pushNewIssue(payload remoteNewIssuePayloadData) error {
+	data, err := payload.Encode()
+	if err != nil {
+		return err
+	}
+	req, err := ctx.buildPostRequest("issues", strings.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	_, err = ctx.secureCreate(req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 type remoteIssue struct {
 	Id             int        `json:"id"`

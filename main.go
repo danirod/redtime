@@ -23,10 +23,12 @@ var (
 	flagSetIssues     = flag.NewFlagSet("issues", flag.ExitOnError)
 	flagSetProjects   = flag.NewFlagSet("projects", flag.ExitOnError)
 	flagSetTimelog    = flag.NewFlagSet("timelog", flag.ExitOnError)
+	flagSetNewIssue   = flag.NewFlagSet("newissue", flag.ExitOnError)
 
 	flagForce         bool
 	flagFull          bool
 	flagIncludeClosed bool
+	flagParentIssueId uint
 	flagProjectId     uint
 	flagIssueId       int
 	flagPivot         string
@@ -35,6 +37,8 @@ var (
 	flagComments      string
 	flagTimeSince     string
 	flagTimeUntil     string
+	flagTitle         string
+	flagTrackerId     uint
 
 	context *redmineClient
 
@@ -75,6 +79,24 @@ var (
 			fs:          flagSetTrack,
 			handler:     doTrack,
 		},
+		{
+			name:        "newissue",
+			description: "creates a new issue",
+			fs:          flagSetNewIssue,
+			handler:     doNewIssue,
+		},
+		{
+			name:        "trackers",
+			description: "lists the trackers",
+			fs:          nil,
+			handler:     doTrackers,
+		},
+		{
+			name:        "statuses",
+			description: "lists the issue statuses",
+			fs:          nil,
+			handler:     doIssueStatuses,
+		},
 	}
 )
 
@@ -97,6 +119,11 @@ func init() {
 	flagSetTimelog.StringVar(&flagPivot, "pivot", "", "Group entries by a specific field")
 
 	flagSetProjects.BoolVar(&flagFull, "full", false, "show extra information per project")
+
+	flagSetNewIssue.UintVar(&flagProjectId, "project", 0, "The project to get entries for")
+	flagSetNewIssue.UintVar(&flagParentIssueId, "parent", 0, "The parent issue for this issue")
+	flagSetNewIssue.UintVar(&flagTrackerId, "tracker", 0, "The tracker to use for this issue")
+	flagSetNewIssue.StringVar(&flagTitle, "title", "", "The title for this issue")
 }
 
 func main() {
