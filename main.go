@@ -56,6 +56,12 @@ var (
 			handler:     doListIssues,
 		},
 		{
+			name:        "newissue",
+			description: "creates a new issue",
+			fs:          flagSetNewIssue,
+			handler:     doNewIssue,
+		},
+		{
 			name:        "projects",
 			description: "list the projects in the instance",
 			fs:          flagSetProjects,
@@ -66,6 +72,12 @@ var (
 			description: "show the status of the running task",
 			fs:          nil,
 			handler:     doStatus,
+		},
+		{
+			name:        "statuses",
+			description: "lists the issue statuses",
+			fs:          nil,
+			handler:     doIssueStatuses,
 		},
 		{
 			name:        "timelog",
@@ -80,22 +92,10 @@ var (
 			handler:     doTrack,
 		},
 		{
-			name:        "newissue",
-			description: "creates a new issue",
-			fs:          flagSetNewIssue,
-			handler:     doNewIssue,
-		},
-		{
 			name:        "trackers",
 			description: "lists the trackers",
 			fs:          nil,
 			handler:     doTrackers,
-		},
-		{
-			name:        "statuses",
-			description: "lists the issue statuses",
-			fs:          nil,
-			handler:     doIssueStatuses,
 		},
 	}
 )
